@@ -3,7 +3,7 @@
 import json
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import frappe
 
@@ -12,7 +12,35 @@ from order_profitability_predictor.order_profitability_predictor.doctype.profita
 )
 from order_profitability_predictor.profitability import calculate_quotation_profitability
 from order_profitability_predictor.purchase_evidence import observed_purchase_evidence
-from order_profitability_predictor.tests.site_fixtures import make_manufacturing_fixture
+from order_profitability_predictor.tests.site_fixtures import (
+	ensure_manufacturing_prerequisites,
+	make_manufacturing_fixture,
+)
+
+
+class FixturePrerequisiteTests(unittest.TestCase):
+	def test_missing_transit_is_inserted_once_through_document_api(self):
+		doc = Mock()
+		module = "order_profitability_predictor.tests.site_fixtures"
+		with (
+			patch(module + ".frappe.db.exists", side_effect=[False, True]) as exists,
+			patch(module + ".frappe.get_doc", return_value=doc) as get_doc,
+		):
+			ensure_manufacturing_prerequisites()
+			ensure_manufacturing_prerequisites()
+		self.assertEqual(exists.call_count, 2)
+		exists.assert_called_with("Warehouse Type", "Transit")
+		get_doc.assert_called_once_with({"doctype": "Warehouse Type", "name": "Transit"})
+		doc.insert.assert_called_once_with()
+
+	def test_existing_transit_is_not_loaded_or_changed(self):
+		module = "order_profitability_predictor.tests.site_fixtures"
+		with (
+			patch(module + ".frappe.db.exists", return_value=True),
+			patch(module + ".frappe.get_doc") as get_doc,
+		):
+			ensure_manufacturing_prerequisites()
+		get_doc.assert_not_called()
 
 
 @unittest.skipUnless(os.environ.get("OPP_RUN_SITE_TESTS") == "1", "Opt-in site integration tests")

@@ -7,10 +7,40 @@ loader, existing company, global defaults, direct cost writes or commits are use
 from uuid import uuid4
 
 import frappe
-from frappe.utils import nowdate
+from frappe.utils import getdate, nowdate
+from frappe.utils.nestedset import get_root_of
+
+
+def ensure_manufacturing_prerequisites():
+	"""Provide the setup-wizard master required by Company's warehouse creation.
+
+	Fresh installed sites may not have run the setup wizard. Keep this inside
+	the caller's rollback-only transaction; never update an existing master.
+	"""
+	if not frappe.db.exists("Warehouse Type", "Transit"):
+		frappe.get_doc({"doctype": "Warehouse Type", "name": "Transit"}).insert()
+
+
+def ensure_fixture_roots():
+	"""Create only missing standard roots/UOM on a pre-setup disposable site."""
+	roots = {}
+	for doctype, field, label in [
+		("Item Group", "item_group_name", "All Item Groups"),
+		("Customer Group", "customer_group_name", "All Customer Groups"),
+		("Territory", "territory_name", "All Territories"),
+	]:
+		root = get_root_of(doctype)
+		if not root:
+			root = frappe.get_doc({"doctype": doctype, field: label, "is_group": 1}).insert().name
+		roots[doctype] = root
+	if not frappe.db.exists("UOM", "Nos"):
+		frappe.get_doc({"doctype": "UOM", "uom_name": "Nos"}).insert()
+	return roots
 
 
 def make_manufacturing_fixture(costing_basis="Price List"):
+	ensure_manufacturing_prerequisites()
+	roots = ensure_fixture_roots()
 	token = uuid4().hex[:10]
 	prefix = f"OPP Test {token}"
 	company = frappe.get_doc(
@@ -24,8 +54,19 @@ def make_manufacturing_fixture(costing_basis="Price List"):
 			chart_of_accounts="Standard",
 		)
 	).insert()
+	# Quotation validation needs an active year; scope it to this new company.
+	year = getdate(nowdate()).year
+	frappe.get_doc(
+		{
+			"doctype": "Fiscal Year",
+			"year": prefix,
+			"year_start_date": f"{year}-01-01",
+			"year_end_date": f"{year}-12-31",
+			"companies": [{"company": company.name}],
+		}
+	).insert()
 	group = frappe.get_doc(
-		dict(doctype="Item Group", item_group_name=prefix, parent_item_group="All Item Groups")
+		dict(doctype="Item Group", item_group_name=prefix, parent_item_group=roots["Item Group"])
 	).insert()
 	price_list = frappe.get_doc(
 		dict(doctype="Price List", price_list_name=prefix, currency="INR", buying=1, selling=1, enabled=1)
@@ -78,12 +119,12 @@ def make_manufacturing_fixture(costing_basis="Price List"):
 		dict(
 			doctype="Customer Group",
 			customer_group_name=prefix,
-			parent_customer_group="All Customer Groups",
+			parent_customer_group=roots["Customer Group"],
 			is_group=0,
 		)
 	).insert()
 	territory = frappe.get_doc(
-		dict(doctype="Territory", territory_name=prefix, parent_territory="All Territories", is_group=0)
+		dict(doctype="Territory", territory_name=prefix, parent_territory=roots["Territory"], is_group=0)
 	).insert()
 	customer = frappe.get_doc(
 		dict(

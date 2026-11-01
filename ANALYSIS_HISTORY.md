@@ -70,7 +70,7 @@ snapshot JSON against the requested Quotation, preventing cross-quotation access
 Automated coverage includes server-generated snapshots, null handling, historical
 immutability, ordering, comparison arithmetic, role restrictions, revoked source
 access, REST handlers/lists/reports/count/value queries, sharing denial and
-cross-quotation rejection. The latest complete local suite passed 116 tests;
+cross-quotation rejection. The latest complete local suite passed 125 tests;
 fixtures were rolled back with persistent table hashes unchanged. JavaScript
 suites cover dialog behavior, escaping, pagination and incomplete results.
 

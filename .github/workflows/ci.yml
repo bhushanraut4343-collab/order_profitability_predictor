@@ -102,7 +102,11 @@ jobs:
           bench --site opp-ci.localhost migrate
           bench build --app order_profitability_predictor
           bench --site opp-ci.localhost list-apps
+      - name: Verify Redis and mark fresh environment disposable
+        run: |
+          cd "$RUNNER_TEMP/opp-bench"
+          env/bin/python apps/order_profitability_predictor/scripts/test_environment.py --bench "$RUNNER_TEMP/opp-bench" --site opp-ci.localhost
       - name: Run every Python and security test (no skips)
         run: |
           cd "$RUNNER_TEMP/opp-bench"
-          env/bin/python -B apps/order_profitability_predictor/scripts/run_tests.py --site opp-ci.localhost --integration
+          env/bin/python -B apps/order_profitability_predictor/scripts/run_tests.py --site opp-ci.localhost --bench "$RUNNER_TEMP/opp-bench" --integration

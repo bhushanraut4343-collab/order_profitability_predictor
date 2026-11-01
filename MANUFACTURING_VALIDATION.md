@@ -59,7 +59,7 @@ UOM conversions); this does not establish actual rate freshness. Estimates are
 gross manufacturing estimates, not guaranteed actual profit or full overhead.
 
 The original manufacturing validation stage passed 70 Python tests. The latest
-release-candidate validation passed 116 Python tests with no failures/skips, both
+release-candidate validation passed 125 Python tests with no failures/skips, both
 JavaScript suites and syntax, lint and configured security checks. These results
 have different scopes: the historical live scenario checks above were not all
 rerun by the current self-contained integration suite. No permanent business

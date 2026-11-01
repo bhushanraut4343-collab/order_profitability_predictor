@@ -1,13 +1,12 @@
 # Developer checks for 0.2.0-rc.1
 
-Supported runtime: Frappe/ERPNext v16 (CI targets v16.52.0 and the current
-`version-16` branches; GitHub runs remain pending), Python 3.14, Node 24, Yarn 1.22, MariaDB 11.8 and Redis 7.
-The moving branch deliberately detects upstream compatibility failures.
+Supported runtime: Frappe/ERPNext v16, Python 3.14 and Node 24. CI targets both
+v16.52.0 and the current `version-16` branches, using MariaDB 11.8 and Redis 7.
+A passing local target does not establish a passing GitHub matrix.
 
-## Local tools
+## Static and JavaScript checks
 
-From this app repository, install development-only tools into an isolated Python
-environment, then install the locked JavaScript dependencies:
+From the app repository:
 
 ```bash
 python3.14 -m venv .venv-ci
@@ -24,92 +23,113 @@ bandit -r order_profitability_predictor -x order_profitability_predictor/tests
 pre-commit run --all-files --show-diff-on-failure
 ```
 
-Pre-commit checks tracked files; before staging new files, check them explicitly
-with `pre-commit run --files <new-files>`. It may normalize whitespace. Install
-Git hooks with `pre-commit install` only when desired. No hook commits or stages.
+Check new files explicitly with `pre-commit run --files <new-files>` before staging.
+Hooks may normalize whitespace but never stage or commit. ESLint uses
+`eslint.config.mjs`; the original scaffold `.eslintrc` is not used by ESLint 10.
 The development lockfile overrides minimatch to patched 11.0.3 for
-GHSA-g3hv-75wg-m249; recheck lint/glob compatibility when updating ESLint.
-There are no JavaScript production dependencies.
+GHSA-g3hv-75wg-m249. Recheck lint/glob compatibility when updating ESLint. There
+are no JavaScript production dependencies. Bandit and dependency audits
+supplement, rather than prove, application security.
 
-ESLint uses the flat `eslint.config.mjs` configuration; the original scaffold
-`.eslintrc` is not used by ESLint 10. Bandit scans production Python; security tests themselves are run by unittest.
-These tools supplement, rather than prove, application security.
+## Disposable integration environments only
 
-## Python tests
+Do not run fixture-generating tests against shared development, pilot or production
+sites. SQL rollback cannot restore Frappe's MyISAM `__global_search` table, and
+Redis search queues/caches can outlive a rolled-back fixture transaction.
 
-Use a dedicated test site with ERPNext and this app already installed. From the
-**Bench** directory, using Bench's Python environment:
+Use a newly provisioned, disposable Bench, site/database and private Redis endpoints.
+CI is the reproducible automated provisioning path. Local operators must provision
+a separate Bench and record ownership of all new resources before running tests.
+Do not copy either a permanent site's configuration or its database. A private,
+unprivileged MariaDB instance with its own data directory/Unix socket avoids
+requiring changes to existing database users, permissions or services. Private
+Redis instances can use unused loopback ports, unique directories, `save ""` and
+`appendonly no`. Do not reuse or flush a shared Redis instance.
+
+Install ERPNext then this app through standard Bench/Frappe APIs on the new site.
+Configure `redis_cache`, `redis_queue` and `redis_socketio` only in that disposable
+Bench/site. One private Redis process per role is suitable locally; CI uses a
+job-isolated container with distinct logical databases. Verify PING for all roles.
+Do not start existing Bench services or change their configuration for these tests.
+
+After provisioning, replace every placeholder below; the site must start with
+`opp-it-` (local) or `opp-ci` (CI). From the disposable Bench, use its Python:
 
 ```bash
-# Fast mocked unit tests; opt-in database test classes are explicitly skipped.
-env/bin/python -B apps/order_profitability_predictor/scripts/run_tests.py --site your-test-site.localhost
+# Explicit acknowledgement that the new environment can be discarded.
+# Verifies Redis connectivity, records database identity and endpoints,
+# and refuses to overwrite an existing marker.
+env/bin/python apps/order_profitability_predictor/scripts/test_environment.py --bench <disposable-bench> --site <opp-it-unique.localhost>
 
-# Complete unit + database + staff security suite; any skip fails this run.
-env/bin/python -B apps/order_profitability_predictor/scripts/run_tests.py --site your-test-site.localhost --integration
+# Full suite: any skipped integration/security test makes the run fail.
+env/bin/python -B apps/order_profitability_predictor/scripts/run_tests.py --bench <disposable-bench> --site <opp-it-unique.localhost> --integration
+
+# Unit-only mode: opt-in database tests are explicitly skipped.
+env/bin/python -B apps/order_profitability_predictor/scripts/run_tests.py --bench <disposable-bench> --site <opp-it-unique.localhost>
 ```
 
-Replace `your-test-site.localhost` with your own disposable site. Never use a
-production site. The runner rejects sites without `test` or `ci` in their name
-and includes an additional development-site denylist. Naming alone does not establish safety:
-choose an actual disposable development site. The runner performs no installation,
-migration, configuration change or setup wizard, and does not switch default sites.
+The marker is an accident-prevention guard, not a security boundary against
+arbitrary code or an operator who deliberately marks shared data disposable.
+Never mark a shared environment. The runner requires an explicit Bench path and
+matching marker before database tests. It refuses the known permanent development
+and pilot sites and rejects changed database identities or Redis endpoints.
 
-Integration fixtures create unique companies (and their standard accounts and
-warehouses), item/customer groups, items, price lists, BOMs, customers, quotations,
-users, permissions and snapshots using normal document APIs. No existing demo
-records or local IDs are required. The valuation fixture uses the Item valuation
-rate; the price-list fixture uses Item Price. Both BOMs have output quantity 2,
-material cost 200 and finished-good operation cost 40; quotations sell 6 for 1200.
-No saved calculated BOM totals are assigned and no purchasing/stock/accounting
-transactions are created. Purchase evidence edge cases use isolated mocks and
-real read-only query regressions against the generated materials.
+Readiness checks fail before fixtures if any Redis role is unavailable. The runner
+activates Frappe's test context, so cache failure cannot silently trigger direct
+SQL search indexing. Search indexing is not disabled; it remains contained within
+the disposable database/Redis resources. No permissions or security assertions
+are bypassed. All application calculations use the unchanged production engine.
 
-The runner forbids database commits, rolls back fixtures on success/failure and
-compares all non-log table contents, including authentication and child tables,
-before/after. Staff tests use per-test savepoints and clear temporary-user caches.
-Run sequentially on a quiet test site: concurrent business activity would correctly
-fail the preservation check. Framework operational logs/caches can change.
-Avoid killing the test process; connection closure still rolls back uncommitted
-SQL, but final verification then cannot run.
+## Fixtures and side-effect verification
 
-Frappe's `IntegrationTestCase.setUpClass` commits automatically. These suites
-instead use unittest with standard Frappe document APIs, savepoints and explicit
-rollback so they are safe on an existing test site and need no global test-record
-loader. The provided runner is the supported entry point for this safety contract.
+Fixtures use unique companies, accounts/warehouses, groups, items, price lists,
+customers, BOMs, company-scoped Fiscal Years, quotations, users and snapshots.
+Missing standard Transit Warehouse Type, tree roots and stock UOM are created
+through normal document APIs, only when absent. Existing masters are not changed.
+No setup-complete flag is bypassed and the full setup wizard is not invoked.
 
-Current complete suite: **116 Python tests**, including role access, revoked
-Quotation access through REST handlers/lists/reports/count/value queries, sharing,
-cross-quotation references, snapshot immutability and purchase-evidence disclosure.
-Company restrictions include in-memory denial checks; genuine two-company HTTP
-and browser-session integration remains a separate validation task.
+BOMs have output quantity 2, material cost 200 and configured finished-good
+operation cost 40; quotations sell 6 units for 1200. No calculated BOM cost totals
+are forced and no purchasing, stock or accounting transactions are created.
+Purchase-evidence edge cases use isolated mocks and actual permission-aware
+queries against the generated materials.
 
-## GitHub Actions
+Commits are blocked during fixture tests. Per-test savepoints and final rollback
+remain in place. Before/after fingerprints check business, child, authentication
+and configuration tables, excluding operational logs. Business-table changes fail
+the suite. The derived MyISAM search table is reported separately: it may change
+only inside the explicitly disposable database, and rollback is never claimed to
+restore it. Its exclusion from business-table equality is not permission to run
+these tests on shared sites. Test Redis queues can retain pending search entries;
+discarding the entire owned environment provides isolation.
 
-`.github/workflows/ci.yml` runs static checks and a two-entry integration matrix.
-Each entry provisions a fresh disposable Bench/site, installs ERPNext followed by
-this app, migrates **that CI site only**, builds the app, and runs all Python tests
-without skips. It never connects to local development sites. CI database/admin
-passwords are disposable service credentials, not production secrets.
+Frappe's IntegrationTestCase class setup commits automatically. These suites use
+unittest with Frappe document APIs and explicit transactions instead. The supplied
+runner is the supported entry point. Run sequentially on a quiet environment.
 
-The workflow uses read-only repository permissions, no publishing/deployment
-credentials and no `pull_request_target`. Pull requests run as untrusted code
-without privileged secrets. Review external dependencies and framework updates.
-A successful local test run does not establish a passing GitHub run: inspect both
-matrix entries and the static job before release. Browser tests, Marketplace
-review, cross-company HTTP coverage and performance/load testing are separate.
+Cleanup must validate the run identifier, resource paths, ownership and process
+identities/start times. Stop only processes started by that run. Remove only its
+private directories/database, never an existing site or global search table.
+Leave uncertain resources untouched. The test runner does not delete resources;
+CI runners discard their own fresh services, and local provisioning owns cleanup.
 
-## Recorded validation status
+## Validation status and remaining coverage
 
-The latest local complete run passed **116 tests, zero failures and zero skips**.
-The fast unit-only run passed 95 tests and explicitly skipped 21 opt-in database
-checks; use `--integration` for the release gate. Both JavaScript suites and
-syntax checks, Ruff lint/format, ESLint, Bandit and all configured pre-commit
-checks passed. The development npm audit found no known vulnerabilities at that
-time. Before/after table checks found no persistent fixture changes.
+The isolated local run passed **125 Python tests, zero failures and zero skips**,
+including staff permissions, revoked source access through REST handlers, lists,
+reports/count/value queries, sharing denial, cross-quotation references and
+historical immutability. No persistent database/search-index changes were detected
+in that run. Seven additional environment guards cover protected sites, markers,
+configuration changes, readiness and refusal of direct search SQL fallback.
 
-An earlier app build passed fresh local installation and basic functional tests.
-That is separate from validation of this candidate's GitHub workflow, which has
-not been executed on GitHub. Browser testing of the latest purchase observations,
-real two-company HTTP access checks and load testing remain pending. The tests
-exercise server-side REST handlers and permission queries, not authenticated
-browser sessions or a complete network/API penetration test.
+JavaScript suites, syntax, lint and configured security checks supplement the
+Python suite. Genuine two-company authenticated HTTP tests, browser sessions,
+production-scale load testing and both updated GitHub CI matrix runs remain
+separate checks. Local validation used the available v16.52.0 sources; support for
+the moving `version-16` target still requires its GitHub job to pass.
+
+The CI workflow grants read-only repository access, uses no publishing credentials
+or pull_request_target event, and creates a fresh Bench/site for each matrix entry.
+It verifies host Redis binaries before Bench initialization, then verifies all
+three configured Redis endpoints before running fixtures. CI service passwords
+are disposable runner credentials, not production secrets.

@@ -17,7 +17,7 @@ requires = ["flit_core >=3.4,<4"]
 build-backend = "flit_core.buildapi"
 
 [tool.flit.sdist]
-include = ["PROFITABILITY.md", "ANALYSIS_HISTORY.md", "MANUFACTURING_VALIDATION.md", "TESTING.md", "requirements-dev.txt", "scripts/run_tests.py"]
+include = ["PROFITABILITY.md", "ANALYSIS_HISTORY.md", "MANUFACTURING_VALIDATION.md", "TESTING.md", "requirements-dev.txt", "scripts/run_tests.py", "scripts/test_environment.py"]
 
 # These dependencies are only installed when developer mode is enabled
 [tool.bench.dev-dependencies]

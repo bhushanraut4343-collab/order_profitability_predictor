@@ -137,15 +137,15 @@ Details: [calculation/configuration](PROFITABILITY.md),
 
 ## Tests and CI
 
-See [TESTING.md](TESTING.md) for reproducible unit, rollback-only integration,
+See [TESTING.md](TESTING.md) for reproducible unit, disposable-only integration,
 JavaScript, lint and security checks. Tests generate their own unique records and
 require no local demo company or record IDs. GitHub Actions provisions fresh
 Frappe/ERPNext v16 sites for both v16.52.0 and the current `version-16` branches.
-The complete Python suite contains 116 tests; CI must finish with no skipped tests.
+The complete Python suite contains 125 tests; CI must finish with no skipped tests.
 
 ## Release status
 
-Latest local validation: **116 Python tests passed with no failures or skips**;
+Latest local validation: **125 Python tests passed with no failures or skips**;
 both JavaScript suites, syntax checks, Ruff, ESLint, Bandit and configured
 pre-commit checks passed. The development npm audit reported no known
 vulnerabilities at validation time. Integration fixtures rolled back with no
