@@ -57,6 +57,12 @@ def document(rows, deny=False, strip=False):
 
 
 class ValuationEvidenceTests(unittest.TestCase):
+	def setUp(self):
+		# These unit fixtures mock source documents; real permission coverage is separate.
+		guard = patch("order_profitability_predictor.purchase_evidence.fields_readable", return_value=True)
+		guard.start()
+		self.addCleanup(guard.stop)
+
 	def evidence(self, rows, bases=None, doc=None):
 		bases = bases or [basis()]
 		with (

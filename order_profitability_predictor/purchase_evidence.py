@@ -8,6 +8,8 @@ from math import isfinite
 import frappe
 from frappe.utils import get_time, getdate, nowdate
 
+from order_profitability_predictor.financial_permissions import fields_readable
+
 MAX_ROWS_PER_TYPE = 500
 MAX_DOCUMENT_CHECKS = 30
 PURCHASE_TYPES = ("Purchase Receipt", "Purchase Invoice")
@@ -42,6 +44,12 @@ def observed_purchase_evidence(bases, base_currency):
 		codes = sorted({key[1] for key in keys if key[0] == company})
 		for doctype in PURCHASE_TYPES:
 			try:
+				if not fields_readable(
+					doctype, ("company", "currency", "posting_date", "posting_time", "items", "is_return")
+				) or not fields_readable(
+					doctype + " Item", ("item_code", "uom", "base_net_rate", "qty"), parenttype=doctype
+				):
+					return results
 				rows = frappe.get_list(
 					doctype,
 					filters={

@@ -7,6 +7,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import now_datetime
 
+from order_profitability_predictor.financial_permissions import historical_fields
 from order_profitability_predictor.profitability import calculate_quotation_profitability
 
 
@@ -15,6 +16,7 @@ def snapshot_values(quotation_name):
 	if frappe.session.user == "Guest":
 		frappe.throw(_("Please sign in to save an analysis."), frappe.PermissionError)
 	frappe.has_permission("Profitability Analysis", "create", throw=True)
+	historical_fields()
 	result = calculate_quotation_profitability(quotation_name)
 	timestamp = now_datetime()
 	# A serialization round trip detaches nested lists/dictionaries from the engine.

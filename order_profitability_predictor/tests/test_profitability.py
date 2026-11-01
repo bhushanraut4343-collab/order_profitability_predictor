@@ -50,6 +50,8 @@ class ProfitabilityTests(unittest.TestCase):
 			return quotation if doctype == "Quotation" else boms[name]
 
 		with (
+			patch("order_profitability_predictor.profitability.quotation_fields"),
+			patch("order_profitability_predictor.profitability.bom_fields"),
 			patch("order_profitability_predictor.profitability.frappe.get_doc", side_effect=get_doc),
 			patch(
 				"order_profitability_predictor.profitability.frappe.db",

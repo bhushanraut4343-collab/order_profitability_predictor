@@ -16,6 +16,10 @@ MODULE = "order_profitability_predictor.history"
 
 class HistoryTests(unittest.TestCase):
 	def setUp(self):
+		# These unit fixtures mock source documents; real permission coverage is separate.
+		guard = patch(MODULE + ".historical_fields", return_value=True)
+		guard.start()
+		self.addCleanup(guard.stop)
 		self.saved = dict(
 			quotation="Q-1",
 			company="Company",

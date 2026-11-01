@@ -7,6 +7,7 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime
 
+from order_profitability_predictor.financial_permissions import historical_fields
 from order_profitability_predictor.profitability import calculate_quotation_profitability
 
 
@@ -17,6 +18,7 @@ def _authorize(quotation_name):
 		frappe.throw(_("A saved Quotation name is required."), frappe.ValidationError)
 	frappe.get_doc("Quotation", quotation_name).check_permission("read")
 	frappe.has_permission("Profitability Analysis", "read", throw=True)
+	historical_fields()
 
 
 def _snapshot(doc, quotation_name):

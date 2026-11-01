@@ -5,6 +5,7 @@ from math import isfinite
 import frappe
 from frappe.utils import getdate, nowdate
 
+from order_profitability_predictor.financial_permissions import fields_readable
 from order_profitability_predictor.purchase_evidence import evidence_key, observed_purchase_evidence
 
 STALE_RATE_DAYS = 90
@@ -42,6 +43,8 @@ def rate_evidence(basis):
 			"modified": ["<=", basis["modified"]],
 		}
 		try:
+			if not fields_readable("Item Price", ("price_list_rate", "valid_from", "valid_upto")):
+				return None
 			records = frappe.get_list(
 				"Item Price",
 				filters=filters,
@@ -76,6 +79,14 @@ def rate_evidence(basis):
 			("Purchase Invoice", "posting_date"),
 		]:
 			try:
+				if not fields_readable(
+					doctype,
+					("company", date_field, "items", "docstatus", "is_return"),
+					optional=("docstatus", "is_return"),
+				) or not fields_readable(
+					doctype + " Item", ("item_code", "uom", "base_net_rate"), parenttype=doctype
+				):
+					return None
 				parents = frappe.get_list(
 					doctype,
 					filters={

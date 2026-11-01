@@ -19,6 +19,10 @@ CONTROLLER = "order_profitability_predictor.order_profitability_predictor.doctyp
 
 class AnalysisTests(unittest.TestCase):
 	def setUp(self):
+		# These unit fixtures mock source documents; real permission coverage is separate.
+		guard = patch(CONTROLLER + ".historical_fields", return_value=True)
+		guard.start()
+		self.addCleanup(guard.stop)
 		self.engine = dict(
 			quotation="Q-TEST",
 			company="Company",

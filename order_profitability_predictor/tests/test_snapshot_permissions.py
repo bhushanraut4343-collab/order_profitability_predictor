@@ -15,6 +15,12 @@ MODULE = "order_profitability_predictor.permissions"
 
 
 class SnapshotPermissionTests(unittest.TestCase):
+	def setUp(self):
+		# These unit fixtures mock source documents; real permission coverage is separate.
+		guard = patch(MODULE + ".historical_fields", return_value=True)
+		guard.start()
+		self.addCleanup(guard.stop)
+
 	def test_missing_or_invalid_reference_denied(self):
 		for reference in (None, "", "  ", ["Q-1"]):
 			with self.subTest(reference=reference):

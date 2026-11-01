@@ -3,6 +3,8 @@
 import frappe
 from frappe import _
 
+from order_profitability_predictor.financial_permissions import historical_fields
+
 
 def has_analysis_permission(doc, user=None, ptype=None, **kwargs):
 	user = user or frappe.session.user
@@ -13,7 +15,8 @@ def has_analysis_permission(doc, user=None, ptype=None, **kwargs):
 		return False
 	try:
 		quotation = frappe.get_doc("Quotation", quotation_name)
-	except frappe.DoesNotExistError:
+		historical_fields(user=user)
+	except (frappe.DoesNotExistError, frappe.PermissionError):
 		return False
 	return bool(frappe.has_permission("Quotation", "read", doc=quotation, user=user))
 
@@ -23,6 +26,7 @@ def analysis_query_conditions(user=None, **kwargs):
 	if user == "Guest":
 		return "1=0"
 	try:
+		historical_fields(user=user)
 		# Build SQL only; reuse standard owner/company/User Permissions and query
 		# hooks without enumerating all Quotation names or recursing into snapshots.
 		query = frappe.qb.get_query("Quotation", fields=["name"], user=user, ignore_permissions=False)

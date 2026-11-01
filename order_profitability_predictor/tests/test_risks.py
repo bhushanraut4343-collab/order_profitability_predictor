@@ -7,6 +7,12 @@ from order_profitability_predictor.risks import annotate_risks, minimum_margin, 
 
 
 class RiskTests(unittest.TestCase):
+	def setUp(self):
+		# These unit fixtures mock source documents; real permission coverage is separate.
+		guard = patch("order_profitability_predictor.risks.fields_readable", return_value=True)
+		guard.start()
+		self.addCleanup(guard.stop)
+
 	def result(self, complete=True, margin=40):
 		return dict(
 			is_complete=complete,

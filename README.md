@@ -66,7 +66,14 @@ calculation only. System Manager alone lacks Quotation/BOM access; System Manage
 
 History/comparison endpoints check both Quotation and analysis read permission.
 Direct saved-record viewing and lists require both snapshot permission and current
-source Quotation read access. Revoking source access also blocks historical
+source Quotation read access and current visibility of the financial inputs. Restricted or
+masked source financial fields deny the whole calculation instead of returning partial
+figures. Child fields use their parent DocType permissions. Historical records do not
+retain full costing-branch provenance, so viewing them requires the combined set of
+source costing-field permissions, including operation inputs, plus snapshot payload
+permissions. Sales Manager alone cannot read saved costs without BOM field access.
+Purchase-price evidence has separate purchase-field checks; unavailable evidence never
+changes BOM costs. Revoking source access also blocks historical
 snapshots. Snapshot sharing is blocked to prevent standard share overrides.
 Guest and ordinary portal users have no default access.
 

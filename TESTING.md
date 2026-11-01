@@ -133,3 +133,13 @@ or pull_request_target event, and creates a fresh Bench/site for each matrix ent
 It verifies host Redis binaries before Bench initialization, then verifies all
 three configured Redis endpoints before running fixtures. CI service passwords
 are disposable runner credentials, not production secrets.
+
+
+Financial-field security regression tests customize Property Setters only inside the
+explicitly disposable site transaction. They cover hidden and masked costing fields,
+parent-table restrictions, source permission revocation, snapshot payload restrictions,
+REST handlers, list/report/count/value queries and custom history/comparison endpoints.
+Metadata caches are cleared after rollback. Unit costing fixtures mock the field guard
+explicitly; the disposable staff tests exercise the real guard and permission metadata.
+Historical access conservatively requires the union of costing inputs because older
+snapshots do not record every costing branch. No snapshot contents are rewritten.

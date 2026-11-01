@@ -5,6 +5,7 @@ from math import isfinite
 import frappe
 from erpnext.manufacturing.doctype.bom.bom import get_good_qty
 
+from order_profitability_predictor.financial_permissions import bom_fields, quotation_fields
 from order_profitability_predictor.risks import annotate_risks
 
 
@@ -39,6 +40,7 @@ def _bom_cost(name, item_code, company, stock_qty, path=()):
 		return result
 	bom = frappe.get_doc("BOM", name)
 	bom.check_permission("read")
+	bom_fields(bom)
 	if bom.item != item_code or bom.company != company or bom.docstatus != 1 or not bom.is_active:
 		warnings.append(f"BOM {name} must match the item/company and be active and submitted.")
 		return result
@@ -169,6 +171,7 @@ def calculate_quotation_profitability(quotation_name):
 	"""
 	quotation = frappe.get_doc("Quotation", quotation_name)
 	quotation.check_permission("read")
+	quotation_fields()
 	currency = frappe.get_cached_value("Company", quotation.company, "default_currency")
 	warnings = [
 		"Saved BOM costs are estimates. Underlying rates may be outdated; BOM modified dates do not prove rate freshness."
