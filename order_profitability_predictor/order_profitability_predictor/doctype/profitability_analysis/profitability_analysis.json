@@ -1,0 +1,170 @@
+{
+  "doctype": "DocType",
+  "name": "Profitability Analysis",
+  "module": "Order Profitability Predictor",
+  "custom": 0,
+  "autoname": "hash",
+  "naming_rule": "Random",
+  "engine": "InnoDB",
+  "field_order": [
+    "quotation",
+    "analyzed_at",
+    "analyzed_by",
+    "company",
+    "base_currency",
+    "summary_section",
+    "net_selling_value",
+    "estimated_cost",
+    "expected_gross_profit",
+    "expected_gross_margin_percentage",
+    "cost_status",
+    "risk_warnings",
+    "item_breakdown",
+    "snapshot_json"
+  ],
+  "fields": [
+    {
+      "fieldname": "quotation",
+      "label": "Quotation",
+      "fieldtype": "Link",
+      "read_only": 0,
+      "options": "Quotation",
+      "reqd": 1,
+      "in_list_view": 1,
+      "set_only_once": 1
+    },
+    {
+      "fieldname": "analyzed_at",
+      "label": "Analysis Date and Time",
+      "fieldtype": "Datetime",
+      "read_only": 1,
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "analyzed_by",
+      "label": "Analyzed By",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "company",
+      "label": "Company",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "Company",
+      "reqd": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "base_currency",
+      "label": "Base Currency",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "Currency",
+      "reqd": 1
+    },
+    {
+      "fieldname": "summary_section",
+      "label": "Saved Profitability",
+      "fieldtype": "Section Break",
+      "description": "Amounts are in the saved base currency. Missing values are shown as Not available; numeric values and nulls are retained in Snapshot JSON."
+    },
+    {
+      "fieldname": "net_selling_value",
+      "label": "Net Selling Value",
+      "fieldtype": "Data",
+      "read_only": 1
+    },
+    {
+      "fieldname": "estimated_cost",
+      "label": "Estimated Cost",
+      "fieldtype": "Data",
+      "read_only": 1
+    },
+    {
+      "fieldname": "expected_gross_profit",
+      "label": "Expected Gross Profit",
+      "fieldtype": "Data",
+      "read_only": 1
+    },
+    {
+      "fieldname": "expected_gross_margin_percentage",
+      "label": "Expected Gross Margin (%)",
+      "fieldtype": "Data",
+      "read_only": 1
+    },
+    {
+      "fieldname": "cost_status",
+      "label": "Cost Completeness",
+      "fieldtype": "Select",
+      "read_only": 1,
+      "options": "Complete\nIncomplete",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "risk_warnings",
+      "label": "Risk Warnings and Severity",
+      "fieldtype": "Code",
+      "read_only": 1,
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "item_breakdown",
+      "label": "Item Cost Breakdown",
+      "fieldtype": "Code",
+      "read_only": 1,
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "snapshot_json",
+      "label": "Full Snapshot JSON",
+      "fieldtype": "Code",
+      "read_only": 1,
+      "options": "JSON",
+      "reqd": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1,
+      "write": 0,
+      "delete": 0,
+      "share": 0,
+      "export": 0,
+      "print": 0,
+      "email": 0
+    },
+    {
+      "role": "Sales Manager",
+      "read": 1,
+      "create": 1,
+      "write": 0,
+      "delete": 0,
+      "share": 0,
+      "export": 0,
+      "print": 0,
+      "email": 0
+    }
+  ],
+  "sort_field": "analyzed_at",
+  "sort_order": "DESC",
+  "title_field": "quotation",
+  "search_fields": "quotation,company",
+  "allow_rename": 0,
+  "track_changes": 0,
+  "owner": "Administrator",
+  "modified_by": "Administrator",
+  "creation": "2026-10-24 00:00:00",
+  "modified": "2026-10-24 00:00:00",
+  "actions": [],
+  "links": [],
+  "states": []
+}

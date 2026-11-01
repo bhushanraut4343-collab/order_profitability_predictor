@@ -1,11 +1,12 @@
 [project]
 name = "order_profitability_predictor"
 authors = [
-    { name = "Local Development", email = "developer@example.com"}
+    { name = "Bhushan Raut", email = "bhushanraut4343@gmail.com"}
 ]
 description = "Estimate quotation profitability and identify manufacturing cost risks."
-requires-python = ">=3.14"
+requires-python = ">=3.14,<3.15"
 readme = "README.md"
+license = { file = "license.txt" }
 dynamic = ["version"]
 dependencies = [
     # "frappe~=16.0.0" # Installed and managed by bench.
@@ -14,6 +15,9 @@ dependencies = [
 [build-system]
 requires = ["flit_core >=3.4,<4"]
 build-backend = "flit_core.buildapi"
+
+[tool.flit.sdist]
+include = ["PROFITABILITY.md", "ANALYSIS_HISTORY.md", "MANUFACTURING_VALIDATION.md", "TESTING.md", "requirements-dev.txt", "scripts/run_tests.py"]
 
 # These dependencies are only installed when developer mode is enabled
 [tool.bench.dev-dependencies]
