@@ -53,3 +53,44 @@ jspm_packages/
 
 # Aider AI Chat
 .aider*
+
+# Local CI tooling (not application dependencies)
+.venv-ci/
+.cache-ci/
+.ruff_cache/
+
+# Environment secrets (only sanitized examples may be shared)
+.env.*
+!.env.example
+
+# Local Frappe sites, site credentials and database exports
+sites/
+site_config.json
+common_site_config.json
+backup/
+backups/
+*.sql
+*.sql.*
+*.dump
+*.dump.*
+*.backup
+*.sqlite
+*.sqlite3
+*.db
+*.pem
+*.key
+
+# Operational logs and test/coverage output
+logs/
+*.log
+*.log.*
+.coverage
+.coverage.*
+coverage/
+htmlcov/
+coverage.xml
+lcov.info
+.pytest_cache/
+.mypy_cache/
+.test-results/
+junit*.xml

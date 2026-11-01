@@ -1,0 +1,20 @@
+{
+  "name": "order-profitability-predictor-checks",
+  "private": true,
+  "scripts": {
+    "test": "node order_profitability_predictor/tests/test_quotation_ui.cjs && node order_profitability_predictor/tests/test_history_ui.cjs",
+    "check:syntax": "node --check order_profitability_predictor/public/js/quotation.js && node --check order_profitability_predictor/tests/test_quotation_ui.cjs && node --check order_profitability_predictor/tests/test_history_ui.cjs",
+    "lint": "eslint order_profitability_predictor/public/js/quotation.js order_profitability_predictor/tests/*.cjs --max-warnings 0"
+  },
+  "devDependencies": {
+    "eslint": "10.14.0",
+    "@eslint/js": "10.0.1",
+    "globals": "17.14.0"
+  },
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "overrides": {
+    "minimatch": "11.0.3"
+  }
+}

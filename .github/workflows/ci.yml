@@ -1,0 +1,94 @@
+name: Tests and security
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: pip install -r requirements-dev.txt
+      - run: npm ci --ignore-scripts
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: npm run lint
+      - run: npm audit --audit-level=moderate
+      - run: npm run check:syntax
+      - run: npm test
+      - run: bandit -r order_profitability_predictor -x order_profitability_predictor/tests
+      - name: Validate all files, including newly added source
+        run: pre-commit run --all-files --show-diff-on-failure
+  integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        framework-ref: [v16.52.0, version-16]
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_ROOT_PASSWORD: ci-only-database-password
+          MARIADB_ROOT_HOST: '%'
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: --health-cmd="redis-cli ping" --health-interval=5s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mariadb-client libmariadb-dev pkg-config libcups2-dev
+          pip install frappe-bench==5.31.0
+          npm install --global yarn@1.22.22
+      - name: Create isolated Bench and install ERPNext
+        env:
+          FRAMEWORK_REF: ${{ matrix.framework-ref }}
+        run: |
+          bench init "$RUNNER_TEMP/opp-bench" --frappe-branch "$FRAMEWORK_REF" --python "$(command -v python)" --skip-assets
+          cd "$RUNNER_TEMP/opp-bench"
+          bench set-config -g redis_cache redis://127.0.0.1:6379/0
+          bench set-config -g redis_queue redis://127.0.0.1:6379/1
+          bench set-config -g redis_socketio redis://127.0.0.1:6379/2
+          bench get-app --branch "$FRAMEWORK_REF" https://github.com/frappe/erpnext
+          bench get-app "$GITHUB_WORKSPACE"
+          bench new-site opp-ci.localhost --db-host 127.0.0.1 --db-port 3306 --db-root-username root --db-root-password ci-only-database-password --admin-password ci-only-admin-password --mariadb-user-host-login-scope='%'
+          bench --site opp-ci.localhost install-app erpnext
+          bench --site opp-ci.localhost install-app order_profitability_predictor
+          bench --site opp-ci.localhost migrate
+          bench build --app order_profitability_predictor
+          bench --site opp-ci.localhost list-apps
+      - name: Run every Python and security test (no skips)
+        run: |
+          cd "$RUNNER_TEMP/opp-bench"
+          env/bin/python -B apps/order_profitability_predictor/scripts/run_tests.py --site opp-ci.localhost --integration
