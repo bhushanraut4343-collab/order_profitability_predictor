@@ -19,6 +19,9 @@ build-backend = "flit_core.buildapi"
 [tool.flit.sdist]
 include = ["PROFITABILITY.md", "ANALYSIS_HISTORY.md", "MANUFACTURING_VALIDATION.md", "TESTING.md", "LIFECYCLE.md", "TROUBLESHOOTING.md", "PERFORMANCE.md", "RELEASE_NOTES.md", "requirements-dev.txt", "scripts/run_tests.py", "scripts/test_environment.py"]
 
+[tool.bench.frappe-dependencies]
+frappe = ">=16.0.0-dev,<17.0.0"
+
 # These dependencies are only installed when developer mode is enabled
 [tool.bench.dev-dependencies]
 # package_name = "~=1.1.0"
