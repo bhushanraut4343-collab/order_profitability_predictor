@@ -1,8 +1,6 @@
-# Developer checks for 0.2.0-rc.1
+# Developer checks for 0.2.0
 
-Supported runtime: Frappe/ERPNext v16, Python 3.14 and Node 24. CI targets both
-v16.52.0 and the current `version-16` branches, using MariaDB 11.8 and Redis 7.
-A passing local target does not establish a passing GitHub matrix.
+Full local acceptance used Frappe/ERPNext 16.52.0, Python 3.14 and Node 24. Separate local automated validation passed 145 Python tests on Frappe 16.54.0 / ERPNext 16.53.0. CI targets v16.52.0 and moving `version-16` branches, using MariaDB 11.8 and Redis 7. Results apply to the tested revisions and scopes, not future branch tips.
 
 ## Static and JavaScript checks
 
@@ -115,18 +113,15 @@ CI runners discard their own fresh services, and local provisioning owns cleanup
 
 ## Validation status and remaining coverage
 
-The isolated local run passed **125 Python tests, zero failures and zero skips**,
-including staff permissions, revoked source access through REST handlers, lists,
-reports/count/value queries, sharing denial, cross-quotation references and
-historical immutability. No persistent database/search-index changes were detected
-in that run. Seven additional environment guards cover protected sites, markers,
-configuration changes, readiness and refusal of direct search SQL fallback.
+An earlier isolated local run passed 125 Python tests with zero failures and skips, including permission, history and immutability checks. Subsequent local validation passed 145 tests with zero failures and skips, no persistent table changes and no search-index changes. Earlier test counts describe historical runs, not the current verified suite count.
 
-JavaScript suites, syntax, lint and configured security checks supplement the
-Python suite. Genuine two-company authenticated HTTP tests, browser sessions,
-production-scale load testing and both updated GitHub CI matrix runs remain
-separate checks. Local validation used the available v16.52.0 sources; support for
-the moving `version-16` target still requires its GitHub job to pass.
+Saved results for [GitHub Actions run 41340177899](https://github.com/bhushanraut4343-collab/order_profitability_predictor/actions/runs/41340177899), dated 1 November 2026 and linked to commit `3a24c06ab0391062b54b067a9093fbb5443c207e`, record success for the static job and both integration jobs: `integration (v16.52.0)` and `integration (version-16)`. Each integration job completed 145 tests and reported no persistent table changes. These are historical saved results, not a newly executed or live-reverified CI run.
+
+Local evidence records the moving-version combination as Frappe 16.54.0 / ERPNext 16.53.0. Exact versions must not be inferred solely from a CI job named `version-16`. Final-release CI remains required for the exact release commit, including approved documentation, packaging and version changes.
+
+JavaScript suites, syntax, lint and configured security checks supplement the Python suite. Separate disposable-environment acceptance completed authenticated two-company HTTP security checks, fresh installation, upgrade, backup/restore, uninstall/reinstallation and bounded performance testing. These campaigns are not additional tests in the 145-test suite. See [LIFECYCLE.md](LIFECYCLE.md) and [PERFORMANCE.md](PERFORMANCE.md).
+
+HTTP/API checks, JavaScript harness tests and in-process REST handler tests are not manual browser interaction. Genuine Marketplace screenshot captures provide limited UI evidence, not comprehensive manual browser acceptance. Full lifecycle and performance acceptance remains scoped to Frappe/ERPNext 16.52.0. No production-scale or distinct-user capacity claim is made.
 
 The CI workflow grants read-only repository access, uses no publishing credentials
 or pull_request_target event, and creates a fresh Bench/site for each matrix entry.

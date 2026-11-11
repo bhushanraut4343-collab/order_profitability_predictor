@@ -58,12 +58,7 @@ saved BOM costs. Date evidence can be unknown or ambiguous (including material
 UOM conversions); this does not establish actual rate freshness. Estimates are
 gross manufacturing estimates, not guaranteed actual profit or full overhead.
 
-The original manufacturing validation stage passed 70 Python tests. The latest
-release-candidate validation passed 125 Python tests with no failures/skips, both
-JavaScript suites and syntax, lint and configured security checks. These results
-have different scopes: the historical live scenario checks above were not all
-rerun by the current self-contained integration suite. No permanent business
-records were changed to exercise price changes.
+The original manufacturing validation stage passed 70 Python tests; an earlier release-candidate run passed 125. Subsequent local validation and historical CI evidence record 145 tests without failures or skips. These results have different scopes: the historical live scenario checks above were not all rerun by the self-contained integration suite. See [TESTING.md](TESTING.md) for provenance. No permanent business records were changed to exercise price changes.
 
 Latest valuation observations are separate from saved costing and require
 accessible comparable purchase evidence. A recent purchase does not refresh a
@@ -71,6 +66,4 @@ BOM valuation rate or guarantee a future purchase price. Missing evidence is
 informational for valuation costing; financial incompleteness is determined by
 BOM costing inputs. See [PROFITABILITY.md](PROFITABILITY.md).
 
-Fresh-install GitHub CI, latest purchase-evidence browser checks, genuine
-two-company HTTP access validation and production-scale performance review remain
-pending. See [TESTING.md](TESTING.md) for the current commands and coverage.
+Local lifecycle, authenticated two-company HTTP and bounded performance checks subsequently completed on Frappe/ERPNext 16.52.0. Separate automated validation on Frappe 16.54.0 / ERPNext 16.53.0 does not establish full manufacturing, lifecycle or performance acceptance on that combination. Historical hosted CI passed; final-release CI remains required. Neither automated checks nor screenshot captures establish comprehensive manual browser acceptance or production-scale capacity. See [TESTING.md](TESTING.md), [LIFECYCLE.md](LIFECYCLE.md) and [PERFORMANCE.md](PERFORMANCE.md).

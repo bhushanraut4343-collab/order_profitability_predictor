@@ -1,8 +1,6 @@
-# Order Profitability Predictor 0.2.0-rc.1
+# Order Profitability Predictor 0.2.0
 
-Estimate ERPNext Quotation manufacturing profitability, identify costing risks,
-and save immutable analyses for historical comparison. This is a limited-pilot
-candidate, not a guarantee of actual profit.
+Estimate ERPNext Quotation manufacturing profitability, identify costing risks, and save immutable analyses for historical comparison. Estimates are not a guarantee of actual profit.
 
 ## Supported environment
 
@@ -15,43 +13,45 @@ candidate, not a guarantee of actual profit.
 - Flit reads the package version from `order_profitability_predictor/__init__.py`;
   `pyproject.toml` deliberately uses `dynamic = ["version"]`.
 
-An earlier 0.1.0 build was installed and functionally checked on a fresh local
-Frappe/ERPNext 16.52.0 test site. The latest release candidate has passed local
-automated testing; its fresh-install GitHub Actions matrix has not run yet.
-Other v16 releases are CI targets, not confirmed compatibility results.
+Full local lifecycle, security and performance acceptance covers Frappe/ERPNext **16.52.0**. Separate automated validation passed 145 Python tests on Frappe **16.54.0** / ERPNext **16.53.0**; this narrower result does not establish full acceptance on that combination. A historical CI run also passed both configured v16 targets. Moving `version-16` branches do not establish compatibility with future revisions. v15 and other Python versions remain unverified.
 
-## Installation on another ERPNext site
+## Installation and upgrades
 
-Use a reviewed source repository/checkout containing all implementation files;
-no public repository or release URL has been created yet. Replace the placeholders
-below. These are installation instructions, not commands to rerun on an already
-installed site. Back up the target site before installation or migration.
+Repository: <https://github.com/bhushanraut4343-collab/order_profitability_predictor>
+The URL matches the configured Git origin. Historical CI evidence is recorded below; public repository availability and passing CI for the final release commit must be confirmed before publication.
+
+For a new installation, use an existing initialized ERPNext site and an authorized
+Bench administrator. Replace all angle-bracket placeholders before running:
 
 ```bash
 cd /absolute/path/to/target/frappe-bench
-bench --site <site-name> list-apps  # ERPNext must already be installed
-bench get-app <reviewed-app-source>
-bench --site <site-name> backup
+bench --site <site-name> list-apps
+bench --site <site-name> backup --with-files
+bench get-app --branch version-16 https://github.com/bhushanraut4343-collab/order_profitability_predictor.git
 bench --site <site-name> install-app order_profitability_predictor
+bench --site <site-name> migrate
 bench build --app order_profitability_predictor
 bench --site <site-name> clear-cache
 bench --site <site-name> list-apps
 ```
 
-Fresh installation syncs the app's standard Profitability Analysis DocType. For
-an approved update of an existing installation, back up first and run:
+ERPNext must already be installed. Run `get-app` only if this Bench does not
+already contain the app checkout. The branch can move: verify the reviewed
+revision before installation. Completed acceptance covers `3a24c06`, version
+`0.2.0-rc.1`; a published `0.2.0` tag is not available from this documentation.
+Migration affects the whole site and may run pending patches from other apps;
+review those first and never skip failures. A Bench checkout may serve multiple
+sites, so updating its source requires a coordinated deployment plan.
 
-```bash
-bench --site <site-name> migrate
-bench build --app order_profitability_predictor
-bench --site <site-name> clear-cache
-```
+See [lifecycle operations](LIFECYCLE.md) for revision verification, upgrade,
+full backup and recovery procedures. See [troubleshooting](TROUBLESHOOTING.md)
+for access and browser problems.
 
-A normal migration may also run pending patches from other installed apps. Review
-those first; do not skip failed patches. Reload Desk after assets or roles change.
-No application migration is required merely to update this release's version or
-required-app declaration. Existing installed-app version metadata can remain at
-its previous value until a later approved migration.
+**Uninstall deletes the Profitability Analysis DocType/table and saved snapshots.**
+Reinstallation creates an empty table and does not recover historical analyses.
+Recovery requires a verified pre-uninstall backup, files and securely preserved
+site encryption configuration. Restoring a full backup may also restore unrelated
+site data to the backup's point in time. Do not uninstall as a troubleshooting step.
 
 ## Roles and access
 
@@ -148,23 +148,24 @@ See [TESTING.md](TESTING.md) for reproducible unit, disposable-only integration,
 JavaScript, lint and security checks. Tests generate their own unique records and
 require no local demo company or record IDs. GitHub Actions provisions fresh
 Frappe/ERPNext v16 sites for both v16.52.0 and the current `version-16` branches.
-The complete Python suite contains 125 tests; CI must finish with no skipped tests.
+Historical CI for commit `3a24c06` completed 145 Python tests in each integration job. Final-release CI must pass on the exact release commit with no skipped tests.
 
 ## Release status
 
-Latest local validation: **125 Python tests passed with no failures or skips**;
-both JavaScript suites, syntax checks, Ruff, ESLint, Bandit and configured
-pre-commit checks passed. The development npm audit reported no known
-vulnerabilities at validation time. Integration fixtures rolled back with no
-persistent table changes. See [TESTING.md](TESTING.md) for scope and limitations.
+An earlier isolated local run passed 125 Python tests without failures or skips. Subsequent local validation passed 145 tests without failures or skips. Saved results for [GitHub Actions run 41340177899](https://github.com/bhushanraut4343-collab/order_profitability_predictor/actions/runs/41340177899), dated 1 November 2026 and linked to commit `3a24c06`, record successful static checks and both integration jobs, with 145 tests per integration job. These historical results do not cover subsequent uncommitted changes or the planned final `0.2.0` release. See [TESTING.md](TESTING.md) for evidence scope.
 
-Before publication, complete the first GitHub CI runs (including both clean-site
-matrix entries), latest purchase-evidence browser testing, genuine two-company
-HTTP validation and a broader performance review. No public repository, release
-package or Marketplace listing is implied by this source version.
+Local acceptance completed fresh installation, upgrade, backup/restore,
+uninstall/reinstallation, authenticated cross-company security and bounded
+performance testing. These local automated/API results are separate from hosted CI evidence and do not establish comprehensive manual browser acceptance. Genuine screenshot captures provide narrower UI evidence. See [validation scope](TESTING.md),
+[lifecycle results](LIFECYCLE.md) and [performance findings](PERFORMANCE.md).
+Phase 5 is conditionally signed off: the earlier mixed-workload 2× concurrency
+failure remains documented, and History uses 215 SQL queries per measured page.
+No production-capacity guarantee is made.
 
-The source version is `0.2.0-rc.1`; Python packaging normalizes this prerelease to
-`0.2.0rc1`. Installed-site version records may still show an earlier version until
+Draft changes for the planned release are in [0.2.0 release notes](RELEASE_NOTES.md).
+The source version is `0.2.0`. Preparing this source does not establish a published release, Marketplace listing, completed publisher onboarding, configured subscription price or verified public policy URLs. Historical validation remains attributed to its tested revisions; final-release validation must identify the exact release commit.
+
+Installed-site version records may still show an earlier version until
 a separately approved deployment/migration. No existing site update is needed
 merely to prepare these source files.
 

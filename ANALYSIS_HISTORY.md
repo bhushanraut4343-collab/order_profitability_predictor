@@ -5,7 +5,7 @@ approved update that changes schema uses the standard site migration after a
 backup. Replace the placeholder and review other pending app patches first:
 
 ```bash
-bench --site <site-name> backup
+bench --site <site-name> backup --with-files
 bench --site <site-name> migrate
 ```
 
@@ -70,11 +70,11 @@ snapshot JSON against the requested Quotation, preventing cross-quotation access
 Automated coverage includes server-generated snapshots, null handling, historical
 immutability, ordering, comparison arithmetic, role restrictions, revoked source
 access, REST handlers/lists/reports/count/value queries, sharing denial and
-cross-quotation rejection. The latest complete local suite passed 125 tests;
-fixtures were rolled back with persistent table hashes unchanged. JavaScript
-suites cover dialog behavior, escaping, pagination and incomplete results.
+cross-quotation rejection. An earlier local suite passed 125 tests. Subsequent local validation and historical CI evidence record 145 tests; see [TESTING.md](TESTING.md) for scope and provenance. Fixture preservation checks reported no persistent table changes. JavaScript suites cover dialog behavior, escaping, pagination and incomplete results.
 
-Earlier fresh-site basic save/history/comparison checks passed. Latest
-purchase-evidence browser checks, authenticated two-company HTTP testing,
-production-scale permissions/performance review and GitHub CI runs remain
-separate release checks. See [TESTING.md](TESTING.md) for reproducible commands.
+Local lifecycle acceptance verified snapshot preservation through upgrade and
+backup/restore. Standard uninstall removed the original snapshots; reinstallation
+started empty, and recovery in a separate environment restored the originals.
+See [lifecycle procedures and data-loss warning](LIFECYCLE.md).
+
+Authenticated cross-company HTTP checks completed separately from the Python suite. Automated HTTP tests do not establish comprehensive manual browser acceptance. Bounded performance acceptance remains conditional: the mixed-workload 2× concurrency gate failed for small calculations, and History used 215 SQL queries per measured 20-analysis page. See [PERFORMANCE.md](PERFORMANCE.md) and [TESTING.md](TESTING.md). Historical hosted CI passed; final-release CI remains required.
