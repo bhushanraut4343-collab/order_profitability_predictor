@@ -47,8 +47,9 @@ def main():
 		values = {}
 		for table in frappe.db.get_tables():
 			if table.startswith(("__", "tab")) and not table.endswith((" Log", " Log Detail")):
-				quoted = table.replace("`", "``")
-				rows = frappe.db.sql(f"SELECT * FROM `{quoted}`", as_dict=True)
+				# Raw table names include framework tables without the DocType prefix.
+				frappe.qb.validate_doctype(table)
+				rows = frappe.qb.from_(frappe.qb.Table(table)).select("*").run(as_dict=True)
 				encoded = sorted(frappe.as_json(row) for row in rows)
 				values[table] = hashlib.sha256("\n".join(encoded).encode()).hexdigest()
 		return values
